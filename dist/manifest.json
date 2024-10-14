@@ -10,13 +10,14 @@
     "default_icon": "Vector_12.png"
   },
   "background": {
-    "service_worker": "background.ts"
+    "service_worker": "background.js"
   },
   "host_permissions":[
     "<all_urls>"
   ],
   "permissions": [ 
     "storage",
-    "identity"
+    "identity",
+    "desktopCapture"
   ]
 }
