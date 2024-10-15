@@ -18,5 +18,5 @@
     "types": ["chrome"],
     "outDir": "./dist",
   },
-  "include": ["src", "background.js"]
+  "include": ["src", "background.js", "../old.tsx"]
 }
