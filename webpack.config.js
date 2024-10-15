@@ -2,11 +2,17 @@ const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
-  entry: './src/index.tsx', 
+  entry: {
+    background: './src/background.ts', // Фоновый скрипт
+    contentScript: './src/contentScript.ts', // Контентный скрипт
+    popup: './src/index.tsx' // Основное приложение с React (если есть popup)
+  },
+ 
   output: {
     path: path.resolve(__dirname, 'dist'),
-    filename: 'bundle.js',
+    filename: '[name].js' // Файлы будут называться background.js, contentScript.js и popup.js
   },
+
   resolve: {
     extensions: ['.ts', '.tsx', '.js'],
   },
@@ -28,6 +34,11 @@ module.exports = {
       template: './public/index.html',
     }),
   ],
+  optimization: {
+    splitChunks: {
+      chunks: 'all', // Опционально, если хотите разделять код на части
+    },
+  },
   devServer: {
     static: './dist',
   },
