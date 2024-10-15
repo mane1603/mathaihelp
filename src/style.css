@@ -1,0 +1,23 @@
+.app-container {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  width: 300px;
+  height: 318px;
+  border-radius: 20px;
+  background-color: #410058;
+}
+
+.selection-box {
+  position: absolute;
+  border: 2px dashed red;
+  pointer-events: none;
+  background-color: rgba(0, 0, 0, 0.5)
+}
+
+.success-message {
+  color: green;
+}
+
+.error-message {
+  color: red;
+}

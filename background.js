@@ -11,4 +11,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     sendResponse({ status: "success" });
   }
 });
-export {}
+
+
+document.getElementById('captureButton').addEventListener('click', () => {
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    chrome.tabs.sendMessage(tabs[0].id, { type: 'start-selection' });
+  });
+});
+

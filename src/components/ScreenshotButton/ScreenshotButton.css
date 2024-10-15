@@ -1,0 +1,18 @@
+.main_button {
+  padding: 16px;
+  margin: 10px 0;
+  border: none;
+  background-color: #e9ba00;
+  color: white;
+  cursor: url(../../../public/cursor.png);
+  border-radius: 5px;
+  transition: background-color 0.3s;
+  display: flex;
+  font: 600 20px 'Manrope';
+  align-items: center;
+  justify-content: center;
+}
+
+.main_button:hover {
+  background-color: #caa100;
+}

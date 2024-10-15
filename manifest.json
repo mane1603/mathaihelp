@@ -1,0 +1,32 @@
+{
+  "manifest_version": 3,
+  "name": "Math-Help AI",
+  "version": "1.0",
+  "description": "A Chrome Extension that helps solve math problems with AI.",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "tabs"
+  ],
+  "action": {
+    "default_popup": "./dist/index.html",
+    "default_icon": {
+      "12": "./public/Vector_12.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["./dist/bundle.js"]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["*"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
