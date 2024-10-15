@@ -1,8 +1,31 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import html2canvas from "html2canvas";
 import "./ScreenshotButton.css";
+import axios from 'axios'
 
-const ScreenshotButton: React.FC = () => {
+interface IScrBtnProps{
+  isLoading: boolean,
+  setIsLoading: (isLoading: boolean) => void,
+  setResult: (result: string) => void
+}
+
+const ScreenshotButton: React.FC<IScrBtnProps> = (props) => {
+  const [imgURL, setImgURL] = useState('')
+
+  useEffect(()=>{
+    console.log("'imgurl:'",imgURL)
+    props.setIsLoading(true)
+    axios.post(
+      'http://localhost:5555/image/upload',
+      {
+        url: imgURL
+      }
+    ).then(() => {
+
+    })
+    props.setIsLoading(false)
+  }, [imgURL])
+
   function handleScreenshot() {
     // Слушаем результат
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -10,21 +33,19 @@ const ScreenshotButton: React.FC = () => {
       
       if (message.type === "screenshotTaken") {
         const screenshotUrl = message.screenshotUrl;
-
-        const link = document.createElement("a");
-        link.href = screenshotUrl;
-        link.download = "screenshot.png";
-        link.click();
+        setImgURL(screenshotUrl);
       }
+      enableTextSelection()
     });
 
     
     // Отправляем сообщение контентному скрипту для начала выделения области
     console.log("Screenshot button clicked");
 
-
+    
     chrome.tabs.query({ active: true, currentWindow: true }, function send(tabs) {
       console.log("Screenshot button clicked");
+      disableTextSelection();
       if (tabs[0].id) {
         chrome.tabs.sendMessage(tabs[0].id, { type: "startSelection" }, (response) => {
           if (chrome.runtime.lastError) {

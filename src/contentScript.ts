@@ -5,6 +5,14 @@ const selectionBox = document.createElement("div");
 selectionBox.className = "selection-box";
 document.body.appendChild(selectionBox);
 
+const disableTextSelection = () => {
+  document.body.style.userSelect = "none"; // Отключаем выделение текста
+};
+
+const enableTextSelection = () => {
+  document.body.style.userSelect = ""; // Включаем выделение текста обратно
+};
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   console.log("Message received in content script:", message);
   if (message.type === "startSelection") {
@@ -16,6 +24,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 const mouseDownHandler = (e: MouseEvent) => {
+  disableTextSelection()
   startX = e.pageX;
   startY = e.pageY;
   isDrawing = true;
@@ -43,7 +52,7 @@ const mouseMoveHandler = (e: MouseEvent) => {
 
 const mouseUpHandler = () => {
   isDrawing = false;
-
+  enableTextSelection()
   const rect = selectionBox.getBoundingClientRect();
   if (document.body.contains(selectionBox)) {
     document.body.removeChild(selectionBox);

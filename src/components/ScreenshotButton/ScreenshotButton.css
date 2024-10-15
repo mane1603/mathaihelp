@@ -1,6 +1,8 @@
 .main_button {
   padding: 16px;
   margin: 10px 0;
+  width: Fixed (260px);
+  height: 72px;
   border: none;
   background-color: #e9ba00;
   color: white;
