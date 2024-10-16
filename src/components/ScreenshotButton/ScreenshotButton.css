@@ -1,12 +1,12 @@
 .main_button {
   padding: 16px;
   margin: 10px 0;
-  width: Fixed (260px);
+  width: 260px;
   height: 72px;
   border: none;
-  background-color: #e9ba00;
+  background-color: #dbaf00;
   color: white;
-  cursor: url(../../../public/cursor.png);
+  cursor: url('../../../public/cursor.png'), pointer;
   border-radius: 5px;
   transition: background-color 0.3s;
   display: flex;

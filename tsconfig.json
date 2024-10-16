@@ -17,6 +17,10 @@
     "jsx": "react-jsx",
     "types": ["chrome"],
     "outDir": "./dist",
+    "rootDir": "./src"
   },
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": [
+    "./dist/**/*" // This is what fixed it!
+  ]
 }

@@ -1,3 +1,4 @@
+import './style.css'
 let startX = 0,
   startY = 0,
   isDrawing = false;
@@ -5,17 +6,53 @@ const selectionBox = document.createElement("div");
 selectionBox.className = "selection-box";
 document.body.appendChild(selectionBox);
 
+const overlay = document.createElement("div");
+overlay.className = "overlay";
+document.body.appendChild(overlay);
+
 const disableTextSelection = () => {
-  document.body.style.userSelect = "none"; // Отключаем выделение текста
+  document.body.style.userSelect = "none"; // Выключаем выделение текста
 };
 
 const enableTextSelection = () => {
-  document.body.style.userSelect = ""; // Включаем выделение текста обратно
+  document.body.style.userSelect = ""; // Включаем выделение текста 
+};
+
+const resetSelection = () => {  
+  // Очищаем события, чтобы они не дублировались при следующем использовании
+
+  isDrawing = false;
+  enableTextSelection();
+
+  if (document.body.contains(selectionBox)) {
+    document.body.removeChild(selectionBox);
+  }
+  if (document.body.contains(overlay)) {
+    document.body.removeChild(overlay);
+  }
+
+  document.removeEventListener("mousedown", mouseDownHandler);
+  document.removeEventListener("mousemove", mouseMoveHandler);
+  document.removeEventListener("mouseup", mouseUpHandler);
+
 };
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  console.log("Message received in content script:", message);
   if (message.type === "startSelection") {
+    console.log("Message received in content script:", message.type);
+    if (!document.body.contains(selectionBox)) {
+      document.body.appendChild(selectionBox);
+      selectionBox.style.width = '0';
+      selectionBox.style.height = '0';
+      selectionBox.style.left = '0';
+      selectionBox.style.top = '0';
+    }
+    if (!document.body.contains(overlay)) {
+      document.body.appendChild(overlay);
+    }
+    selectionBox.style.display = "block"; 
+    overlay.style.display = "block"; 
+
     document.addEventListener("mousedown", mouseDownHandler);
     document.addEventListener("mousemove", mouseMoveHandler);
     document.addEventListener("mouseup", mouseUpHandler);
@@ -72,10 +109,8 @@ const mouseUpHandler = () => {
       },
       (response) => {
         if (chrome.runtime.lastError) {
-          // An error means the content script is not ready, wait a bit and retry
-          setTimeout(() => send(), 100);
+          setTimeout(() => send(), 200);
         } else {
-          // No error means the message was sent successfully
           console.log("Message sent successfully: ", {
             type: "captureSelection",
             rect: {
@@ -90,17 +125,48 @@ const mouseUpHandler = () => {
     );
   }
   send();
-  //   chrome.runtime.sendMessage({
-  //     type: "captureSelection",
-  //     rect: {
-  //       x: rect.left,
-  //       y: rect.top,
-  //       width: rect.width,
-  //       height: rect.height
-  //     }
-  //   });
+
+  resetSelection()
 
   document.removeEventListener("mousedown", mouseDownHandler);
   document.removeEventListener("mousemove", mouseMoveHandler);
   document.removeEventListener("mouseup", mouseUpHandler);
 };
+
+let resultDisplay = document.createElement('div');
+document.body.appendChild(resultDisplay);
+
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === "startDisplay") {
+    console.log("Message received in content script:", message.type);
+    resetSelection();
+    if(!resultDisplay){
+      resultDisplay = document.createElement('div');
+      document.body.appendChild(resultDisplay);
+    }
+    resultDisplay.style.width = '100px'
+    resultDisplay.style.height = '100px'
+    resultDisplay.style.backgroundColor = '#fff'
+    resultDisplay.className = "result-display__box";
+
+    resultDisplay.innerHTML = message.response;
+    resultDisplay.style.display = 'block';
+  }
+  return true;
+});
+
+// responseSuccess
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  
+  if (message.type === "responseSuccess") {
+    console.log("Message received in content script:", message.type);
+    resetSelection();
+    if(!resultDisplay){
+      resultDisplay = document.createElement('div');
+      document.body.appendChild(resultDisplay);
+    }
+    resultDisplay.innerHTML = message.response;
+  }
+  return true;
+});

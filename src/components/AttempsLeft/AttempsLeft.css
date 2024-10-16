@@ -1,0 +1,18 @@
+.attemps-left{
+    width: 260px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #B300F433;
+    margin-bottom: 16px;
+    border-radius: 8px;
+    margin-top: 9px;
+    color: #FFFFFF;
+    cursor: url('../../../public/cursor.png'), pointer;
+}
+
+.attemps-left:hover{
+    background: #B300F41A;
+    border: 1px solid #B300F4
+}

@@ -1,0 +1,31 @@
+.header{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+}
+
+.header_logo{
+    width: 115px;
+    height: 26px;
+}
+
+.login_button{
+    background: none;
+    box-shadow: none;
+    border-radius: 8px;
+    background-color: #B300F41A;
+    border: 1px solid #B300F41A;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    color: #fff;
+    cursor: url('../../../public/cursor.png'), pointer;
+}
+
+.login_button:hover{
+    margin: 0px;
+    border: 1px solid #B300F4;
+}
