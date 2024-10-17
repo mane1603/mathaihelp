@@ -10,9 +10,15 @@
     margin-top: 9px;
     color: #FFFFFF;
     cursor: url('../../../public/cursor.png'), pointer;
+    font-weight: 500;
 }
 
 .attemps-left:hover{
     background: #B300F41A;
     border: 1px solid #B300F4
+}
+
+.attemps-left span{
+    color: #B300F4;
+    font-weight: 700;
 }

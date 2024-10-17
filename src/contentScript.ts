@@ -53,6 +53,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     selectionBox.style.display = "block"; 
     overlay.style.display = "block"; 
 
+    document.addEventListener('keydown', function(e) {
+      if (e.key == "Escape") {
+        resetSelection()
+      }
+    })
+
     document.addEventListener("mousedown", mouseDownHandler);
     document.addEventListener("mousemove", mouseMoveHandler);
     document.addEventListener("mouseup", mouseUpHandler);
@@ -108,24 +114,18 @@ const mouseUpHandler = () => {
         },
       },
       (response) => {
-        if (chrome.runtime.lastError) {
-          setTimeout(() => send(), 200);
+        if (!chrome.runtime.lastError) {
+          setTimeout(() => send(), 400);
+          console.log("Message sent successfully: ", "captureSelection")
         } else {
-          console.log("Message sent successfully: ", {
-            type: "captureSelection",
-            rect: {
-              x: rect.left,
-              y: rect.top,
-              width: rect.width,
-              height: rect.height,
-            },
-          });
+          console.log("Message sent failed from content script: ");
         }
       }
     );
   }
-  send();
 
+
+  send();
   resetSelection()
 
   document.removeEventListener("mousedown", mouseDownHandler);
@@ -145,10 +145,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       resultDisplay = document.createElement('div');
       document.body.appendChild(resultDisplay);
     }
-    resultDisplay.style.width = '100px'
-    resultDisplay.style.height = '100px'
-    resultDisplay.style.backgroundColor = '#fff'
-    resultDisplay.className = "result-display__box";
+    
+    resultDisplay.classList.add("result-display__box");
 
     resultDisplay.innerHTML = message.response;
     resultDisplay.style.display = 'block';
@@ -169,4 +167,18 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     resultDisplay.innerHTML = message.response;
   }
   return true;
+});
+
+
+// Auth
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === "startAuth") {
+    console.log('Content script recieved auth message');
+    
+    chrome.runtime.sendMessage(message, (res) => {
+      console.log(res);
+    });
+  }
+  return true; // Ответ будет асинхронным
 });
