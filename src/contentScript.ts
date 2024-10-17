@@ -118,7 +118,7 @@ const mouseUpHandler = () => {
           setTimeout(() => send(), 400);
           console.log("Message sent successfully: ", "captureSelection")
         } else {
-          console.log("Message sent failed from content script: ");
+          return console.log("Message sent failed from content script: ");
         }
       }
     );
@@ -156,7 +156,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 // responseSuccess
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  
   if (message.type === "responseSuccess") {
     console.log("Message received in content script:", message.type);
     resetSelection();
@@ -176,9 +175,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "startAuth") {
     console.log('Content script recieved auth message');
     
-    chrome.runtime.sendMessage(message, (res) => {
-      console.log(res);
-    });
+    chrome.runtime.sendMessage(message);
   }
   return true; // Ответ будет асинхронным
+});
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === 'authSuccess') {
+    const { userData } = message;
+    console.log('Authenticated user data from content script:', userData);
+  }
 });

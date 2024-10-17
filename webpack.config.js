@@ -10,7 +10,8 @@ module.exports = {
  
   output: {
     path: path.resolve(__dirname, 'dist'),
-    filename: '[name].js' // Файлы будут называться background.js, contentScript.js и popup.js
+    filename: '[name].js',// Файлы будут называться background.js, contentScript.js и popup.js
+    // publicPath: '/'
   },
 
   resolve: {

@@ -10,17 +10,24 @@ import ScreenshotGuide from './components/ScreenshotGuide/ScreenshotGuide';
 const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false)
   // const [result, setResult] = useState('')
+  document.addEventListener('DOMContentLoaded', () => {
+    // Подписка на сообщения от background script
+    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+      if (message.type === 'authSuccess') {
+        const { userData } = message;
+        console.log('Received user data in popup:', userData);
+        }
+    });
+  });
+  
+  
   return (
     <div className="app-container">
       <Header/> 
       <AttempsLeft/>
       <ScreenshotButton isLoading = {isLoading} setIsLoading={setIsLoading} />
-      {/* {result && <ResultDisplay result = {result}/>} */}
-
       <ScreenshotGuide/>
-
       <Navigation/>
-      
     </div>
   );
 };

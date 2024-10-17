@@ -4,7 +4,7 @@ import axios from "axios";
 async function sendRequest(imgURL: string) {
   const response = await axios.post("http://localhost:5555/image/upload", {
     url: imgURL,
-    language: 'English'
+    language: "English",
   });
   return response;
 }
@@ -16,8 +16,8 @@ chrome.runtime.onInstalled.addListener(() => {
 // background.ts
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "startAuth") {
-    console.log('Background script started Auth');
-    
+    console.log("Background script started Auth");
+
     const authUrl = "http://localhost:5555/auth/google"; // URL для инициации OAuth
 
     chrome.identity.launchWebAuthFlow(
@@ -34,8 +34,46 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           return;
         }
 
-        
-        sendResponse({ success: true, redirectUrl });
+        const code = extractCodeFromRedirectUrl(redirectUrl); // Метод для извлечения данных пользователя
+
+        fetch("http://localhost:5555/auth/google/token", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ code }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.token) {
+              chrome.storage.local.set({ token: data.token }, () => {
+                console.log("Token saved to Chrome storage:", data.token);
+
+                // Отправка данных в контент-скрипт
+                chrome.tabs.query(
+                  { active: true, currentWindow: true },
+                  (tabs) => {
+                    if (tabs[0]?.id) {
+                      chrome.tabs.sendMessage(
+                        tabs[0].id,
+                        { type: "authSuccess", token: data.token },
+                        () => {
+                          console.log("Token sent to content script");
+                        }
+                      );
+                    }
+                  }
+                );
+              });
+            } else {
+              console.error("Failed to retrieve token from server.");
+            }
+          })
+          .catch((err) =>
+            console.error("Error exchanging code for token:", err)
+          );
+
+        sendResponse({ success: true, code });
       }
     );
 
@@ -79,33 +117,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               } else {
                 console.log("croppedScreenshotUrl does not exist");
               }
-
-              // Отправляем ответ от сервера обратно в контент
-
-              function handleSend(message: any, messageType: string) {
-                chrome.tabs.query(
-                  { active: true, currentWindow: true },
-                  function send(tabs) {
-                    if (tabs[0].id) {
-                      chrome.tabs.sendMessage(
-                        tabs[0].id,
-                        { type: messageType, response: message },
-                        (response) => {
-                          if (chrome.runtime.lastError) {
-                            setTimeout(() => send(tabs), 400);
-                          } else {
-                            console.log(
-                              "Message sent successfully from background: ",
-                              messageType,
-                              message
-                            );
-                          }
-                        }
-                      );
-                    }
-                  }
-                );
-              }
             };
           });
         })
@@ -117,5 +128,33 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   return true;
 });
 
-export {};
+// For AUTH handler
+function extractCodeFromRedirectUrl(redirectUrl: string) {
+  const urlParams = new URLSearchParams(new URL(redirectUrl).search);
+  console.log('background.ts:134:4 code:',urlParams.get("code"));
+  return urlParams.get("code");
+}
 
+function handleSend(message: any, messageType: string) {
+  chrome.tabs.query({ active: true, currentWindow: true }, function send(tabs) {
+    if (tabs[0].id) {
+      chrome.tabs.sendMessage(
+        tabs[0].id,
+        { type: messageType, response: message },
+        (response) => {
+          if (chrome.runtime.lastError) {
+            setTimeout(() => send(tabs), 400);
+          } else {
+            return console.log(
+              "Message sent successfully from background: ",
+              messageType,
+              message
+            );
+          }
+        }
+      );
+    }
+  });
+}
+
+export {};

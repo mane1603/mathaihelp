@@ -21,17 +21,6 @@ const ScreenshotButton: React.FC<IScrBtnProps> = (props) => {
   function handleScreenshot() {
     let retryCount = 0;
     const maxRetries = 3;
-    // Слушаем результат
-    // chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    //   console.log("Message received in ScreenshotButton script:", message);
-
-    //   if (message.type === "screenshotTaken") {
-    //     const screenshotUrl = message.screenshotUrl;
-    //     setImgURL(screenshotUrl);
-    //   }
-    // });
-
-    // Отправляем сообщение контентному скрипту для начала выделения области
     console.log("Screenshot button clicked");
 
     chrome.tabs.query(
@@ -49,11 +38,11 @@ const ScreenshotButton: React.FC<IScrBtnProps> = (props) => {
                   retryCount++;
                   setTimeout(() => send(tabs), 400);
                 } else {
-                  console.error("Max retries reached, stopping further attempts.");
+                  return console.error("Max retries reached, stopping further attempts.");
                 }
               } else {
                 // No error means the message was sent successfully
-                console.log(
+                return console.log(
                   "Message sent successfully from screenshotButton: ",
                   "startSelection"
                 );
