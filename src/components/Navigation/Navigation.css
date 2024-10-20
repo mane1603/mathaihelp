@@ -25,12 +25,12 @@
 }
 
 
-.navigation__link:hover{
+.math-help-ai-navigation__link:hover{
     border: 1px solid #B300F4;
     
 }
 
-.navigation__link__content{
+.math-help-ai-navigation__link__content{
     display: flex;
     align-items: center;
     justify-content: center;

@@ -30,7 +30,7 @@ const LogIn: React.FC<ICompProps> = (props) => {
       { active: true, currentWindow: true },
       function send(tabs) {
         console.log("Sing in Button clicked");
-        if (tabs[0].id) {
+        if (tabs[0].id && !hasSent) {
           chrome.tabs.sendMessage(
             tabs[0].id,
             { type: "startAuth" },

@@ -43,7 +43,7 @@ const ScreenshotButton: React.FC<IScrBtnProps> = (props) => {
               (response) => {
                 if (chrome.runtime.lastError) {
                   retryCount++;
-                  console.error(`Error occurred, retrying... Attempt ${retryCount}`);
+                  console.error(`Error occurred, retrying... Attempt ${retryCount}`, chrome.runtime.lastError);
                   // An error means the content script is not ready, wait a bit and retry
                   if (retryCount < maxRetries) {
                     setTimeout(() => send(tabs), 400);
@@ -59,6 +59,7 @@ const ScreenshotButton: React.FC<IScrBtnProps> = (props) => {
                     "Message sent successfully from screenshotButton: ",
                     "startSelection"
                   );
+                  // window.close();
                 } else {
                   console.log("No response from content script");
                 }

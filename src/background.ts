@@ -1,6 +1,12 @@
 // background.js
 import axios from "axios";
 
+chrome.runtime.onInstalled.addListener(() => {
+  console.log("Extension installed");
+});
+
+
+
 async function getToken(): Promise<string | null> {
   return new Promise((resolve) => {
     chrome.storage.local.get(["token"], (result) => {
@@ -123,16 +129,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 // background.ts
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.type === "startSelection") {
-    // Начинаем процесс захвата экрана
-    console.log('Message recieved in Background');
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      if (tabs[0].id) {
-        chrome.tabs.sendMessage(tabs[0].id!, { type: "startSelection" });
-      }
-    });
-    sendResponse({ success: true });
-  }
+  // if (message.type === "startSelection") {
+  //   // Начинаем процесс захвата экрана
+  //   console.log('Message recieved in Background');
+  //   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+  //     if (tabs[0].id) {
+  //       chrome.tabs.sendMessage(tabs[0].id!, { type: "startSelection" });
+  //     }
+  //   });
+  //   sendResponse({ success: true });
+  // }
 
   if (message.type === "captureSelection") {
     console.log("Message received in background script:", message.type);
@@ -199,7 +205,8 @@ function handleSend(message: any, messageType: string) {
   let hasSent = false
   chrome.tabs.query({ active: true, currentWindow: true }, 
     function send(tabs) {
-    if (tabs[0].id) {
+    
+    if (tabs[0].id && !hasSent) {
       chrome.tabs.sendMessage(
         tabs[0].id,
         { type: messageType, response: message },

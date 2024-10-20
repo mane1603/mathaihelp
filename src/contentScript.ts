@@ -41,7 +41,15 @@ const resetSelection = () => {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "startSelection") {
     console.log("Message received in content script:", message.type);
-    sendResponse({ success: true })
+    sendResponse({ success: true });
+    if (!document.body.contains(selectionBox)) {
+      document.body.appendChild(selectionBox);
+      selectionBox.style.width = "0";
+      selectionBox.style.height = "0";
+      selectionBox.style.left = "0";
+      selectionBox.style.top = "0";
+    }
+
     if (!document.body.contains(selectionBox)) {
       document.body.appendChild(selectionBox);
       selectionBox.style.width = "0";
@@ -100,7 +108,7 @@ const mouseMoveHandler = (e: MouseEvent) => {
   selectionBox.style.top = `${height < 0 ? currentY : startY}px`;
 };
 
-const mouseUpHandler = () => {
+const mouseUpHandler = async () => {
   isDrawing = false;
   enableTextSelection();
   const rect = selectionBox.getBoundingClientRect();
@@ -109,12 +117,12 @@ const mouseUpHandler = () => {
   }
   let hasSent = false;
   // Отправляем координаты обратно в расширение
-  let currRetries = 0
+  let currRetries = 0;
   const maxRetries = 3;
-  function send() {
+  async function send() {
     currRetries++
     if (!hasSent && currRetries < maxRetries) {
-      chrome.runtime.sendMessage(
+      const response = await chrome.runtime.sendMessage(
         {
           type: "captureSelection",
           rect: {
@@ -123,26 +131,39 @@ const mouseUpHandler = () => {
             width: rect.width,
             height: rect.height,
           },
-        },
-        (response) => {
-          if (!chrome.runtime.lastError) {
-            if(response && response.success){
-              hasSent = true
-              console.log("Message sent successfully: ", "captureSelection ");
-            }
-            else{
-              console.log("No response from background script");
-            }
-          } else {
-            setTimeout(() => send(), 400);
-            console.log("Message sent failed: ", "captureSelection");
-          }
+        })
+        if(response && response.success){
+          hasSent = true
+          console.log("Message sent successfully: ", "captureSelection ");
         }
-      );
-    }
-  }
+        else if (chrome.runtime.lastError) {
+          setTimeout(() => send(), 400);
+          console.log("Message sent failed: ", "captureSelection", chrome.runtime.lastError);
+        } else {
+          console.log('No response No errors content:143:12');
 
+        }
+      }
+  }
   send();
+
+  // const response = await chrome.runtime.sendMessage({
+  //   type: "captureSelection",
+  //   rect: {
+  //     x: rect.left,
+  //     y: rect.top,
+  //     width: rect.width,
+  //     height: rect.height,
+  //   },
+  // });
+  // if (response && response.success) {
+  //   hasSent = true;
+  //   console.log("Message sent successfully: ", "captureSelection ");
+  // }
+  // else{
+  //   console.log("Message sent failed: ", "captureSelection", chrome.runtime.lastError);
+  // }
+
   resetSelection();
 
   document.removeEventListener("mousedown", mouseDownHandler);
