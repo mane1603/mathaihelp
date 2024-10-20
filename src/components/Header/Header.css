@@ -1,16 +1,16 @@
-.header{
+.math-help-ai-header{
     display: flex;
     justify-content: space-between;
     align-items: center;
 
 }
 
-.header_logo{
+.math-help-ai-header_logo{
     width: 115px;
     height: 26px;
 }
 
-.login_button{
+.math-help-ai-login_button{
     background: none;
     box-shadow: none;
     border-radius: 8px;
@@ -25,7 +25,7 @@
     cursor: url('../../../public/cursor.png'), pointer;
 }
 
-.login_button:hover{
+.math-help-ai-login_button:hover{
     margin: 0px;
     border: 1px solid #B300F4;
 }

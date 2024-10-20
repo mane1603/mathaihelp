@@ -18,6 +18,14 @@ const ScreenshotButton: React.FC<IScrBtnProps> = (props) => {
     props.setIsLoading(false);
   }, [imgURL]);
 
+  // const handleScreenshot = () => {
+  //   // Отправляем сообщение в background для начала захвата скриншота
+  //   chrome.runtime.sendMessage({ type: "startSelection" }, (response) => {
+  //     console.log("Popup sent startSelection message to background");
+  //     // window.close(); // Закрываем popup после отправки команды
+  //   });
+  // };
+  let hasSent = false;
   function handleScreenshot() {
     let retryCount = 0;
     const maxRetries = 3;
@@ -26,39 +34,65 @@ const ScreenshotButton: React.FC<IScrBtnProps> = (props) => {
     chrome.tabs.query(
       { active: true, currentWindow: true },
       function send(tabs) {
-        console.log("Screenshot button clicked");
-        if (tabs[0].id) {
-          chrome.tabs.sendMessage(
-            tabs[0].id,
-            { type: "startSelection" },
-            (response) => {
-              if (chrome.runtime.lastError) {
-                // An error means the content script is not ready, wait a bit and retry
-                if (retryCount < maxRetries) {
+        if (!hasSent && retryCount < maxRetries) {
+          console.log("Screenshot button sent message");
+          if (tabs[0].id) {
+            chrome.tabs.sendMessage(
+              tabs[0].id,
+              { type: "startSelection" },
+              (response) => {
+                if (chrome.runtime.lastError) {
                   retryCount++;
-                  setTimeout(() => send(tabs), 400);
+                  console.error(`Error occurred, retrying... Attempt ${retryCount}`);
+                  // An error means the content script is not ready, wait a bit and retry
+                  if (retryCount < maxRetries) {
+                    setTimeout(() => send(tabs), 400);
+                  } else {
+                    console.error(
+                      "Max retries reached, stopping further attempts."
+                    );
+                  }
+                } else if (response && response.success) {
+                  // Если получили успешный ответ от контентного скрипта
+                  hasSent = true;
+                  console.log(
+                    "Message sent successfully from screenshotButton: ",
+                    "startSelection"
+                  );
                 } else {
-                  return console.error("Max retries reached, stopping further attempts.");
+                  console.log("No response from content script");
                 }
-              } else {
-                // No error means the message was sent successfully
-                return console.log(
-                  "Message sent successfully from screenshotButton: ",
-                  "startSelection"
-                );
               }
-            }
-          );
+            );
+          }
         }
       }
     );
   }
 
+  // function handleScreenshot() {
+  //   if (!hasSent) {
+  //     chrome.runtime.sendMessage(
+  //       {
+  //         type: "startSelection",
+  //       },
+  //       (response) => {
+  //         if (chrome.runtime.lastError) {
+  //           setTimeout(() => handleScreenshot(), 400);
+  //           console.log("Message sent failed: ", "captureSelection");
+  //         } else {
+  //           return console.log("Message sent successfully: ", "captureSelection ");
+  //         }
+  //       }
+  //     );
+  //   }
+  // }
+
   return (
     <button
       onClick={handleScreenshot} // TODO
-      id="captureButton"
-      className="main_button"
+      id="math-help-ai-captureButton"
+      className="math-help-ai-main_button"
     >
       <svg
         width="40"

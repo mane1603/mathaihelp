@@ -1,13 +1,48 @@
 // background.js
 import axios from "axios";
 
-async function sendRequest(imgURL: string) {
-  const response = await axios.post("http://localhost:5555/image/upload", {
-    url: imgURL,
-    language: "English",
+async function getToken(): Promise<string | null> {
+  return new Promise((resolve) => {
+    chrome.storage.local.get(["token"], (result) => {
+      if (result?.token) {
+        resolve(result.token);
+      } else {
+        resolve(null);
+      }
+    });
   });
-  return response;
 }
+
+async function sendRequest(imgURL: string):Promise<string> {
+  const token = await getToken().then(async (token) => {
+    try {
+      const response = await axios.post(
+        "http://localhost:5555/image/upload",
+        {
+          url: imgURL,
+          language: "English",
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      console.log(response.data.gptResponse);
+      
+      return response.data.gptResponse;
+    } catch (error) {
+      console.error("Error in request:", error);
+      return 'No Token';
+    }
+  }).catch(e => {
+    console.log(e);
+    return 'No Token'
+  })
+  return token
+}
+
 
 chrome.runtime.onInstalled.addListener(() => {
   console.log("Screenshot Extension Installed");
@@ -57,7 +92,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                       chrome.tabs.sendMessage(
                         tabs[0].id,
                         { type: "authSuccess", token: data.token },
-                        () => {
+                        (response) => {
                           console.log("Token sent to content script");
                         }
                       );
@@ -82,13 +117,30 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 });
 
+
+
+
+
 // background.ts
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === "startSelection") {
+    // Начинаем процесс захвата экрана
+    console.log('Message recieved in Background');
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs[0].id) {
+        chrome.tabs.sendMessage(tabs[0].id!, { type: "startSelection" });
+      }
+    });
+    sendResponse({ success: true });
+  }
+
   if (message.type === "captureSelection") {
     console.log("Message received in background script:", message.type);
     const { x, y, width, height } = message.rect;
 
     if (!message.rect) return;
+
+    sendResponse({ success: true });
 
     chrome.tabs.captureVisibleTab({ format: "png" }, (screenshotUrl) => {
       fetch(screenshotUrl)
@@ -110,10 +162,18 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
               if (croppedScreenshotUrl) {
                 handleSend("Loading...", "startDisplay");
-                sendRequest(croppedScreenshotUrl).then((result) => {
-                  console.log(result);
-                  handleSend(result.data.gptResponse, "responseSuccess");
-                });
+                await sendRequest(croppedScreenshotUrl).then((result) => {
+                  console.log('RESULT AAAAAAA',result);
+                  
+                  if (result && result === 'No Token') {
+                    handleSend('', "responseDenied");
+                  }
+                  else if(result){
+                    console.log(result);
+                    handleSend(result, "responseSuccess");
+                  }
+
+                }).catch(e => console.log(e));
               } else {
                 console.log("croppedScreenshotUrl does not exist");
               }
@@ -131,12 +191,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 // For AUTH handler
 function extractCodeFromRedirectUrl(redirectUrl: string) {
   const urlParams = new URLSearchParams(new URL(redirectUrl).search);
-  console.log('background.ts:134:4 code:',urlParams.get("code"));
+  console.log("background.ts:134:4 code:", urlParams.get("code"));
   return urlParams.get("code");
 }
 
 function handleSend(message: any, messageType: string) {
-  chrome.tabs.query({ active: true, currentWindow: true }, function send(tabs) {
+  let hasSent = false
+  chrome.tabs.query({ active: true, currentWindow: true }, 
+    function send(tabs) {
     if (tabs[0].id) {
       chrome.tabs.sendMessage(
         tabs[0].id,
@@ -144,12 +206,15 @@ function handleSend(message: any, messageType: string) {
         (response) => {
           if (chrome.runtime.lastError) {
             setTimeout(() => send(tabs), 400);
-          } else {
-            return console.log(
+          }else if (response && response.success) {
+            // Если получили успешный ответ от контентного скрипта
+            hasSent = true;
+            console.log(
               "Message sent successfully from background: ",
-              messageType,
-              message
-            );
+              messageType
+            ) }
+          else {
+            console.log("No response from content script");
           }
         }
       );

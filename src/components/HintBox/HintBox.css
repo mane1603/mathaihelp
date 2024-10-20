@@ -1,0 +1,19 @@
+.math-help-ai-hints-box{
+    display: flex;
+    gap: 10px;
+    position: absolute;
+    bottom: 40px;
+    margin: 0 auto;
+}
+
+.math-help-ai-hint{
+    background-color:#410058;
+    font: 500 12px 'Manrope';
+    padding: 8px 12px;
+    border-radius: 8px;
+}
+
+.math-help-ai-hint span{
+    font-weight: 800;
+    color: #B300F4;
+}

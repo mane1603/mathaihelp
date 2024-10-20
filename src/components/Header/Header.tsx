@@ -1,63 +1,28 @@
-import React, { useEffect, useState } from "react";
+import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
 import "./Header.css";
 import axios from "axios";
 
-const Header: React.FC = () => {
+interface ICompProps{
+  auth: boolean,
+  setAuth: Dispatch<SetStateAction<boolean>>
+}
+
+const Header: React.FC<ICompProps> = (props) => {
   return (
-    <div className="header">
+    <div className="math-help-ai-header">
       <img
         src="../../../public/header_logo.png"
         alt=""
-        className="header_logo"
+        className="math-help-ai-header_logo"
       />
-      <LogIn />
+      <LogIn auth = {props.auth} setAuth ={props.setAuth}/>
     </div>
   );
 };
 
-const LogIn: React.FC = () => {
-  const [loggedIn, setLoggedIn] = useState(false);
+const LogIn: React.FC<ICompProps> = (props) => {
 
-  // async function auth(){
-  //   try {
-  //     const authUrl = 'http://localhost:5555/auth/google'; // URL, который инициирует OAuth процесс
-
-  //     chrome.identity.launchWebAuthFlow({
-  //       url: authUrl,
-  //       interactive: true
-  //     }, (redirectUrl) => {
-  //       if (chrome.runtime.lastError || !redirectUrl) {
-  //         console.error('Ошибка при аутентификации:', chrome.runtime.lastError);
-  //         return;
-  //       }
-
-  //       // Обработка редиректа после успешной аутентификации
-  //       console.log('Redirect URL:', redirectUrl);
-  //       // Тут можно обработать ответ, например, получить токен из redirectUrl
-  //     });
-  //   } catch (error) {
-  //     console.error('Error:', error);
-  //   }
-  // }
-
-  // const handleAuth = () => {
-  //   chrome.runtime.sendMessage({ type: "startAuth" }, (response) => {
-  //     if(chrome.runtime.lastError){
-  //       console.log(chrome.runtime.lastError);
-  //     }
-
-  //     if (response && response?.success ) {
-  //       console.log("Authenticated:", response.redirectUrl);
-  //       // Здесь можешь сохранить токен или данные пользователя
-  //     } else {
-  //       if (response) {
-  //         console.log("Authentication failed:", response.error);
-  //       } else {
-  //         console.log("Response is undefined");
-  //       }
-  //     }
-  //   });
-  // };
+  let hasSent = false
   const handleAuth = () => {
     let retryCount = 0;
     const maxRetries = 3;
@@ -70,7 +35,7 @@ const LogIn: React.FC = () => {
             tabs[0].id,
             { type: "startAuth" },
             (response) => {
-              if(chrome.runtime.lastError){
+              if(chrome.runtime.lastError && !hasSent){
                 if (retryCount < maxRetries) {
                   retryCount++;
                   setTimeout(() => send(tabs), 400);
@@ -78,6 +43,7 @@ const LogIn: React.FC = () => {
                   console.error("Max retries reached, stopping further attempts.");
                 }
               }else{
+                hasSent = true
                 if (response && response?.success) {
                   console.log("Authenticated:", response.redirectUrl);
                   // Здесь можешь сохранить токен или данные пользователя
@@ -96,10 +62,19 @@ const LogIn: React.FC = () => {
     );
   };
 
+
+  function handleLogOut(){
+    chrome.storage.local.remove("token", () => {
+      console.log("Token removed from Chrome storage");
+  // Обновляет состояние компонента, что пользователь вышел из системы
+    });
+  }
+
+
   return (
     <>
-      {loggedIn ? (
-        <button className="login_button">
+      {props.auth ? (
+        <button className="math-help-ai-login_button" onClick={handleLogOut}>
           <svg
             width="24"
             height="24"
@@ -118,7 +93,7 @@ const LogIn: React.FC = () => {
           </svg>
         </button>
       ) : (
-        <button className="login_button" onClick={handleAuth}>
+        <button className="math-help-ai-login_button" onClick={handleAuth}>
           Sing in
         </button>
       )}

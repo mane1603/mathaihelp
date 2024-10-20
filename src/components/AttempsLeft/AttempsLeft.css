@@ -1,4 +1,4 @@
-.attemps-left{
+.math-help-ai-attemps-left{
     width: 260px;
     height: 32px;
     display: flex;
@@ -13,12 +13,12 @@
     font-weight: 500;
 }
 
-.attemps-left:hover{
+.math-help-ai-attemps-left:hover{
     background: #B300F41A;
     border: 1px solid #B300F4
 }
 
-.attemps-left span{
+.math-help-ai-attemps-left span{
     color: #B300F4;
     font-weight: 700;
 }

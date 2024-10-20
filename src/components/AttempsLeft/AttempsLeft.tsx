@@ -3,7 +3,7 @@ import "./AttempsLeft.css";
 
 const AttempsLeft: React.FC = () => {
   return (
-    <div className="attemps-left">
+    <div className="math-help-ai-attemps-left">
       <svg
         width="25"
         height="25"

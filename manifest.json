@@ -17,7 +17,8 @@
     }
   },
   "background": {
-    "service_worker": "./dist/background.js"
+    "service_worker": "./dist/background.js",
+    "persistent": true
   },
   "content_scripts": [
     {

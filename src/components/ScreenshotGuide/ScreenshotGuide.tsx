@@ -2,7 +2,7 @@ import './ScreenshotGuide.css'
 
 const ScreenshotGuide: React.FC = () => {
     return (
-        <div className='screenshot-guide'>
+        <div className='math-help-ai-screenshot-guide'>
         Use
         {/* Arrow Up */}
         <svg width="19" height="18" viewBox="0 0 19 18" fill="none" xmlns="http://www.w3.org/2000/svg">

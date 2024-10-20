@@ -1,4 +1,4 @@
-.main_button {
+.math-help-ai-main_button {
   padding: 16px;
   margin: 10px 0;
   width: 260px;
@@ -15,6 +15,6 @@
   justify-content: center;
 }
 
-.main_button:hover {
+.math-help-ai-main_button:hover {
   background-color: #caa100;
 }
