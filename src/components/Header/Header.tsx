@@ -21,6 +21,17 @@ const Header: React.FC<ICompProps> = (props) => {
 };
 
 const LogIn: React.FC<ICompProps> = (props) => {
+  const [localToken, setLocalToken] = useState('')
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+
+  useEffect(() => {
+    chrome.storage.local.get(['token'], function (result) {
+      if (result.token) {
+        setLocalToken(result.token);
+        setIsLoggedIn(true);
+      }
+    });
+  }, []);
 
   let hasSent = false
   const handleAuth = () => {
@@ -35,9 +46,9 @@ const LogIn: React.FC<ICompProps> = (props) => {
             tabs[0].id,
             { type: "startAuth" },
             (response) => {
+              retryCount++;
               if(chrome.runtime.lastError && !hasSent){
                 if (retryCount < maxRetries) {
-                  retryCount++;
                   setTimeout(() => send(tabs), 400);
                 } else {
                   console.error("Max retries reached, stopping further attempts.");
@@ -73,7 +84,7 @@ const LogIn: React.FC<ICompProps> = (props) => {
 
   return (
     <>
-      {props.auth ? (
+      {props.auth || isLoggedIn ? (
         <button className="math-help-ai-login_button" onClick={handleLogOut}>
           <svg
             width="24"

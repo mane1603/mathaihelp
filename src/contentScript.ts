@@ -2,25 +2,25 @@ import "./style.css";
 import React from "react";
 import ReactDOM from "react-dom";
 import HintBox from "./components/HintBox/HintBox";
-
-let startX = 0,
+{
+  let startX = 0,
   startY = 0,
   isDrawing = false;
 
-const overlay = document.createElement("div");
-overlay.className = "math-help-ai-overlay";
-const selectionBox = document.createElement("div");
-selectionBox.className = "math-help-ai-selection-box";
+  const overlay = document.createElement("div");
+  overlay.className = "math-help-ai-overlay";
+  const selectionBox = document.createElement("div");
+  selectionBox.className = "math-help-ai-selection-box";
 
-const disableTextSelection = () => {
+  const disableTextSelection = () => {
   document.body.style.userSelect = "none"; // Выключаем выделение текста
-};
+  };
 
-const enableTextSelection = () => {
+  const enableTextSelection = () => {
   document.body.style.userSelect = ""; // Включаем выделение текста
-};
+  };
 
-const resetSelection = () => {
+  const resetSelection = () => {
   // Очищаем события, чтобы они не дублировались при следующем использовании
 
   isDrawing = false;
@@ -36,12 +36,28 @@ const resetSelection = () => {
   document.removeEventListener("mousedown", mouseDownHandler);
   document.removeEventListener("mousemove", mouseMoveHandler);
   document.removeEventListener("mouseup", mouseUpHandler);
-};
+  };
 
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+
+
+  const port = chrome.runtime.connect({ name: "popup-background" });
+  port.postMessage({ type: "test" });
+  port.onMessage.addListener(function(response) {
+    console.log("Response from background:", response);
+  });
+
+  const test = async function () {
+    await chrome.runtime.sendMessage('get-user-data', (response) => {
+      // 3. Got an asynchronous response with the data from the service worker
+      console.log('received answer test', response);
+    });
+  }  
+  test();
+
+  chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
   if (message.type === "startSelection") {
     console.log("Message received in content script:", message.type);
-    sendResponse({ success: true });
+    await sendResponse({ success: true });
     if (!document.body.contains(selectionBox)) {
       document.body.appendChild(selectionBox);
       selectionBox.style.width = "0";
@@ -79,9 +95,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     document.addEventListener("mouseup", mouseUpHandler);
   }
   return true;
-});
+  });
 
-const mouseDownHandler = (e: MouseEvent) => {
+  const mouseDownHandler = (e: MouseEvent) => {
   disableTextSelection();
   startX = e.pageX;
   startY = e.pageY;
@@ -91,9 +107,9 @@ const mouseDownHandler = (e: MouseEvent) => {
   selectionBox.style.top = `${startY}px`;
   selectionBox.style.width = "0";
   selectionBox.style.height = "0";
-};
+  };
 
-const mouseMoveHandler = (e: MouseEvent) => {
+  const mouseMoveHandler = (e: MouseEvent) => {
   if (!isDrawing) return;
 
   const currentX = e.pageX;
@@ -106,9 +122,9 @@ const mouseMoveHandler = (e: MouseEvent) => {
   selectionBox.style.height = `${Math.abs(height)}px`;
   selectionBox.style.left = `${width < 0 ? currentX : startX}px`;
   selectionBox.style.top = `${height < 0 ? currentY : startY}px`;
-};
+  };
 
-const mouseUpHandler = async () => {
+  const mouseUpHandler = async () => {
   isDrawing = false;
   enableTextSelection();
   const rect = selectionBox.getBoundingClientRect();
@@ -147,34 +163,17 @@ const mouseUpHandler = async () => {
   }
   send();
 
-  // const response = await chrome.runtime.sendMessage({
-  //   type: "captureSelection",
-  //   rect: {
-  //     x: rect.left,
-  //     y: rect.top,
-  //     width: rect.width,
-  //     height: rect.height,
-  //   },
-  // });
-  // if (response && response.success) {
-  //   hasSent = true;
-  //   console.log("Message sent successfully: ", "captureSelection ");
-  // }
-  // else{
-  //   console.log("Message sent failed: ", "captureSelection", chrome.runtime.lastError);
-  // }
-
   resetSelection();
 
   document.removeEventListener("mousedown", mouseDownHandler);
   document.removeEventListener("mousemove", mouseMoveHandler);
   document.removeEventListener("mouseup", mouseUpHandler);
-};
+  };
 
-let resultDisplay = document.createElement("div");
-document.body.appendChild(resultDisplay);
+  let resultDisplay = document.createElement("div");
+  document.body.appendChild(resultDisplay);
 
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "startDisplay") {
     console.log("Message received in content script:", message.type);
     sendResponse({ success: true });
@@ -247,10 +246,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     closeButton?.addEventListener("click", resetDisplay);
   }
   return true;
-});
+  });
 
-// responseSuccess
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  // responseSuccess
+  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "responseSuccess") {
     console.log("Message received in content script:", message);
     sendResponse({ success: true });
@@ -321,22 +320,23 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     closeButton?.addEventListener("click", resetDisplay);
   }
   return true;
-});
+  });
 
-// Auth
+  // Auth
 
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "startAuth") {
     console.log("Content script recieved auth message");
 
     chrome.runtime.sendMessage(message);
   }
   return true; // Ответ будет асинхронным
-});
+  });
 
-// chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-//   if (message.type === 'authSuccess') {
-//     const { userData } = message;
-//     console.log('Authenticated user data from content script:', userData);
-//   }
-// });
+  // chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  //   if (message.type === 'authSuccess') {
+  //     const { userData } = message;
+  //     console.log('Authenticated user data from content script:', userData);
+  //   }
+  // });
+}

@@ -2,7 +2,15 @@
 import axios from "axios";
 
 chrome.runtime.onInstalled.addListener(() => {
-  console.log("Extension installed");
+  console.log('Service Worker: Installed');
+});
+
+chrome.runtime.onStartup.addListener(() => {
+  console.log('Service Worker: Started');
+});
+
+self.addEventListener('activate', () => {
+  console.log('Service Worker: Activated');
 });
 
 
@@ -50,12 +58,18 @@ async function sendRequest(imgURL: string):Promise<string> {
 }
 
 
-chrome.runtime.onInstalled.addListener(() => {
-  console.log("Screenshot Extension Installed");
+chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
+  // 2. A page requested user data, respond with a copy of `user`
+  if (message === 'get-user-data') {
+    sendResponse('Hello from background');
+  }
+  return true
 });
 
+
+
 // background.ts
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
   if (message.type === "startAuth") {
     console.log("Background script started Auth");
 
@@ -76,7 +90,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         }
 
         const code = extractCodeFromRedirectUrl(redirectUrl); // Метод для извлечения данных пользователя
-
+        console.log(code);
         fetch("http://localhost:5555/auth/google/token", {
           method: "POST",
           headers: {
@@ -125,10 +139,21 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 
 
-
+chrome.runtime.onConnect.addListener(function(port) {
+  if (port.name === "popup-background") {
+      port.onMessage.addListener(function(message) {
+          if (message.type === "test") {
+              // Обработайте сообщение и верните результат
+              console.log('Test port from Background, message:', message);
+              
+              port.postMessage({ result: "screenshot taken" });
+          }
+      });
+  }
+});
 
 // background.ts
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
   // if (message.type === "startSelection") {
   //   // Начинаем процесс захвата экрана
   //   console.log('Message recieved in Background');
@@ -146,9 +171,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
     if (!message.rect) return;
 
-    sendResponse({ success: true });
+    // sendResponse({ success: true });
 
-    chrome.tabs.captureVisibleTab({ format: "png" }, (screenshotUrl) => {
+    await chrome.tabs.captureVisibleTab({ format: "png" }, (screenshotUrl) => {
       fetch(screenshotUrl)
         .then((response) => response.blob())
         .then((blob) => createImageBitmap(blob)) // Используем createImageBitmap вместо Image()
@@ -204,10 +229,10 @@ function extractCodeFromRedirectUrl(redirectUrl: string) {
 function handleSend(message: any, messageType: string) {
   let hasSent = false
   chrome.tabs.query({ active: true, currentWindow: true }, 
-    function send(tabs) {
+    async function send(tabs) {
     
     if (tabs[0].id && !hasSent) {
-      chrome.tabs.sendMessage(
+      await chrome.tabs.sendMessage(
         tabs[0].id,
         { type: messageType, response: message },
         (response) => {
