@@ -4,7 +4,7 @@
   margin: 0;
   width: 300px;
   height: 330px;
-  /* border-radius: 20px; */
+   border-radius: 20px;
   background-color: #410058;
   padding: 20px;
   box-shadow: none;
@@ -43,13 +43,14 @@
 .math-help-ai-hints-box{
   display: flex;
   gap: 10px;
-  position: absolute;
-  bottom: 40px;
-  margin: 0 auto;
-  left: 30vw;
   z-index: 9998;
   font: 500 12px 'Manrope';
   color: white;
+  
+  position: fixed;
+  bottom: 15px;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .math-help-ai-hint{
@@ -68,17 +69,41 @@
   color: #B300F4;
 }
 
+.math-help-ai-result-loading__box{
+  position: fixed;
+  right: 50px;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: #410058;
+  border: 1px solid #B300F488;
+  color: white;
+  width: 300px;
+  height: 45px;
+  border-radius: 8px;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  z-index: 9999;
+  animation: 2s loading_anim infinite ;
+  font-size: 16px;
+}
 
 .math-help-ai-result-display__box{
   padding: 20px;
-  position: absolute;
-  top: 300px;
-  right: 100px;
+  padding-bottom: 0;
+
+  position: fixed;
+  right: 50px;
+  top: 50%;
+  transform: translateY(-50%);
+
   z-index: 9999;
   border-radius: 20px;
   background-color: #410058;
   width: 300px;
-  max-height: 407px;
+  height: 375px;
   color: white;
 }
 
@@ -99,6 +124,7 @@
   box-shadow: none;
   border: 1px solid #B300F41A;
   box-sizing: border-box;
+  font-weight: 700;
 }
 
 .math-help-ai-result-display__header__button:hover{
@@ -107,28 +133,36 @@
 
 .math-help-ai-result-display__response{
   overflow-y: auto;
-  max-height: 238px;
-  min-height: 60px;
+  height: 238px;
   padding: 10px;
   color: white;
   margin-bottom: 9px;
+  font: 500 16px 'Manrope';
+  border: 0.5px solid #b300f47f;
+  scrollbar-width: none;
+}
+
+.math-help-ai-result-display__response::-webkit-scrollbar {
+  display: none; 
 }
 
 .math-help-ai-result-display__footer{
   display: flex;
-  gap: 8px;
+  justify-content: space-between;
+  width: 100%;
 }
 
 .math-help-ai-result-display__footer button{
-  width: 125px;
-  height: 32px;
+  width: 130px;
+  height: 35px;
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 500;
-  font-size: 12px;
+  font-weight: 400;
+  font-size: 14px;
   color: white;
+  text-wrap: nowrap;
 }
 
 .math-help-ai-result-display__footer button:hover{
@@ -140,10 +174,25 @@
   box-sizing: border-box;
   border: 1px solid #B300F4;
   width: 127px;
+
 }
 
 .math-help-ai-result-display__footer__try-again_btn{
   background-color: #410058;
   box-sizing: border-box;
   border: 1px solid #B300F433
+}
+
+
+
+@keyframes loading_anim {
+  0% {
+    color: white;
+  }
+  50% {
+    color: #B300F499;
+  }
+  100% {
+    color: white;
+  }
 }

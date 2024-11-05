@@ -2,30 +2,30 @@ import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
 import "./Header.css";
 import axios from "axios";
 
-interface ICompProps{
-  auth: boolean,
-  setAuth: Dispatch<SetStateAction<boolean>>
+interface ICompProps {
+  auth: boolean;
+  setAuth: Dispatch<SetStateAction<boolean>>;
 }
 
 const Header: React.FC<ICompProps> = (props) => {
   return (
-    <div className="math-help-ai-header">
-      <img
-        src="../../../public/header_logo.png"
-        alt=""
-        className="math-help-ai-header_logo"
-      />
-      <LogIn auth = {props.auth} setAuth ={props.setAuth}/>
-    </div>
+      <div className="math-help-ai-header">
+        <img
+            src="../../../public/header_logo.png"
+            alt=""
+            className="math-help-ai-header_logo"
+        />
+        <LogIn auth={props.auth} setAuth={props.setAuth} />
+      </div>
   );
 };
 
 const LogIn: React.FC<ICompProps> = (props) => {
-  const [localToken, setLocalToken] = useState('')
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [localToken, setLocalToken] = useState("");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    chrome.storage.local.get(['token'], function (result) {
+    chrome.storage.local.get(["token"], function (result) {
       if (result.token) {
         setLocalToken(result.token);
         setIsLoggedIn(true);
@@ -33,54 +33,45 @@ const LogIn: React.FC<ICompProps> = (props) => {
     });
   }, []);
 
-  let hasSent = false
+  let hasSent = false;
   const handleAuth = () => {
     let retryCount = 0;
     const maxRetries = 3;
     chrome.tabs.query(
       { active: true, currentWindow: true },
-      function send(tabs) {
-        console.log("Sing in Button clicked");
-        if (tabs[0].id && !hasSent) {
-          chrome.tabs.sendMessage(
-            tabs[0].id,
-            { type: "startAuth" },
-            (response) => {
-              retryCount++;
-              if(chrome.runtime.lastError && !hasSent){
-                if (retryCount < maxRetries) {
-                  setTimeout(() => send(tabs), 400);
-                } else {
-                  console.error("Max retries reached, stopping further attempts.");
-                }
-              }else{
-                hasSent = true
-                if (response && response?.success) {
-                  console.log("Authenticated:", response.redirectUrl);
-                  // Здесь можешь сохранить токен или данные пользователя
-                } else {
-                  if (response) {
-                    console.log("Authentication failed:", response.error);
-                  } else {
-                    console.log("Response is undefined");
-                  }
-                }
-              }
-            }
-          );
+      async function send(tabs) {
+        if (tabs[0].id && !hasSent && retryCount < maxRetries) {
+          const response = await chrome.tabs.sendMessage(tabs[0].id, {
+            type: "startAuth",
+          });
+
+          retryCount++;
+          alert(response.redirectUrl)
+          if (response && response.success) {
+            hasSent = true;
+            console.log("Authenticated:", response.redirectUrl);
+          } else if (chrome.runtime.lastError && !hasSent) {
+            setTimeout(() => send(tabs), 400);
+            console.log("Message sent successfully: ", "startAuth ");
+          }
+        } else {
+          console.log("No response No errors Header:58:12");
         }
       }
     );
   };
 
-
-  function handleLogOut(){
-    chrome.storage.local.remove("token", () => {
-      console.log("Token removed from Chrome storage");
-  // Обновляет состояние компонента, что пользователь вышел из системы
+  function handleLogOut() {
+    chrome.runtime.sendMessage({ type: "logout" }, (response) => {
+      if (response?.success) {
+        console.log("Logout handled in background script");
+        setIsLoggedIn(false);
+        props.setAuth(false); // Update the authentication state
+      } else {
+        console.error("Failed to log out.");
+      }
     });
   }
-
 
   return (
     <>
@@ -105,7 +96,7 @@ const LogIn: React.FC<ICompProps> = (props) => {
         </button>
       ) : (
         <button className="math-help-ai-login_button" onClick={handleAuth}>
-          Sing in
+          Sign in
         </button>
       )}
     </>

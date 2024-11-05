@@ -7,17 +7,30 @@ import Navigation from './components/Navigation/Navigation';
 import ScreenshotGuide from './components/ScreenshotGuide/ScreenshotGuide';
 
 const App: React.FC = () => {
-  const [isLoading, setIsLoading] = useState(false)
-  const [auth, setAuth] = useState(false)
-  // const [result, se tResult] = useState('')
-  useEffect(() => {
-    // Проверка токена при загрузке
-    chrome.storage.local.get(["token"], (result) => {
-      if (result.token) {
-        setAuth(true);
-      }
-    });
-  }, []);
+    const [isLoading, setIsLoading] = useState(true);
+    const [auth, setAuth] = useState(false);
+    chrome.storage.local.set({ token: 'mane@domain.com' }, () => {});
+    const checkToken = () => {
+        chrome.storage.local.get(["token"], (result) => {
+            if (result.token) {
+                setAuth(true);
+            }
+            setIsLoading(false);
+        });
+    };
+
+    useEffect(() => {
+        // Initial token check
+        checkToken();
+
+        // Listen for authSuccess message from background script
+        chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+            if (message.type === "authSuccess") {
+                checkToken(); // Re-check token after successful authentication
+            }
+        });
+    }, []);
+
 
   // Добавляем listener для обновления состояния при получении сообщения
   chrome.runtime.onMessage.addListener((message) => {

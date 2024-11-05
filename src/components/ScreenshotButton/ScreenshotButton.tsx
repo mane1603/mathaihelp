@@ -26,50 +26,72 @@ const ScreenshotButton: React.FC<IScrBtnProps> = (props) => {
   //   });
   // };
   let hasSent = false;
+
   function handleScreenshot() {
-    let retryCount = 0;
     const maxRetries = 3;
+    const retryDelay = 400;
+
     console.log("Screenshot button clicked");
 
-    chrome.tabs.query(
-      { active: true, currentWindow: true },
-      function send(tabs) {
-        if (!hasSent && retryCount < maxRetries) {
-          console.log("Screenshot button sent message");
-          if (tabs[0].id) {
-            chrome.tabs.sendMessage(
-              tabs[0].id,
-              { type: "startSelection" },
-              (response) => {
-                if (chrome.runtime.lastError) {
-                  retryCount++;
-                  console.error(`Error occurred, retrying... Attempt ${retryCount}`, chrome.runtime.lastError);
-                  // An error means the content script is not ready, wait a bit and retry
-                  if (retryCount < maxRetries) {
-                    setTimeout(() => send(tabs), 400);
-                  } else {
-                    console.error(
-                      "Max retries reached, stopping further attempts."
-                    );
-                  }
-                } else if (response && response.success) {
-                  // Если получили успешный ответ от контентного скрипта
-                  hasSent = true;
-                  console.log(
-                    "Message sent successfully from screenshotButton: ",
-                    "startSelection"
-                  );
-                  // window.close();
-                } else {
-                  console.log("No response from content script");
-                }
-              }
-            );
-          }
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      const tab = tabs[0];
+
+      if (!tab || !tab.id) {
+        console.error("No active tab found.");
+        return;
+      }
+
+      const tabId = tab.id;
+
+      async function injectContentScript() {
+        try {
+          await chrome.scripting.executeScript({
+            target: { tabId },
+            files: ["./dist/contentScript.js"]
+          });
+          console.log("Content script injected.");
+        } catch (error) {
+          console.error("Error injecting content script:", error);
         }
       }
-    );
+
+      async function sendMessage() {
+        return new Promise((resolve, reject) => {
+          chrome.tabs.sendMessage(tabId, { type: "startSelection" }, (response) => {
+            if (chrome.runtime.lastError) {
+              console.error("Error sending message:", chrome.runtime.lastError.message);
+              reject(chrome.runtime.lastError);
+            } else if (response && response.success) {
+              console.log("Message sent successfully: startSelection");
+              resolve(response);
+            } else {
+              console.warn("No response from content script");
+              reject(new Error("No response from content script"));
+            }
+          });
+        });
+      }
+
+      async function attemptSendMessage() {
+        for (let retryCount = 0; retryCount < maxRetries; retryCount++) {
+          try {
+            await sendMessage();
+            return; // Exit on success
+          } catch (error) {
+            console.error(`Attempt ${retryCount + 1} failed:`, error);
+            // Delay before next retry
+            await new Promise((res) => setTimeout(res, retryDelay));
+          }
+        }
+        console.error("Max retries reached, stopping attempts.");
+      }
+
+      // Inject the content script every time the function is called
+      injectContentScript().then(attemptSendMessage);
+    });
   }
+
+
 
   // function handleScreenshot() {
   //   if (!hasSent) {
